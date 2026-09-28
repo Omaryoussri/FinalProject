@@ -56,25 +56,22 @@ protected:
     string role;
 
 public:
-    User(int id, string name, string email, string password, int num, string role) {
-        // TO DO : Implement this function
+    User(int id, string name, string email, string password, int num, string role)
+        : id(id), name(name), email(email), password(password), phoneNumber(num), role(role) {
     }
-    
-    string getName() const { 
-        // TO DO : Implement this function
-        return name; 
+
+    string getName() const {
+        return name;
     }
-    
-    string getRole() const { 
-        // TO DO : Implement this function
-        return role; 
+
+    string getRole() const {
+        return role;
     }
-    
-    int getId() const { 
-        // TO DO : Implement this function
-        return id; 
+
+    int getId() const {
+        return id;
     }
-    
+
     // Replaced text menu with graphical window renderer (Polymorphism)
     virtual void renderGUI() = 0;
     virtual ~User() {}

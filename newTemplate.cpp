@@ -2,13 +2,13 @@
 #include <string>
 #include <vector>
 #include <memory>
-//#include <pqxx/pqxx> // PostgreSQL C++ Connection Library
+#include <pqxx/pqxx> // PostgreSQL C++ Connection Library
 
 // --- GUI Library Headers (Dear ImGui / GLFW / OpenGL) ---
-// #include "imgui.h"
-// #include "imgui_impl_glfw.h"
-// #include "imgui_impl_opengl3.h"
-// #include <GLFW/glfw3.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <GLFW/glfw3.h>
 
 using namespace std;
 
@@ -21,17 +21,77 @@ class Order;
 // ==========================================
 class DatabaseManager {
 public:
+    static pqxx::connection connectDB() {
+        return pqxx::connection("dbname=store user=postgres password=omaryoussri258 host=127.0.0.1 port=5432");
+    }
+    
     // Saves a new user into the real database table[cite: 2, 10]
     static void insertUser(const string& role, int id, const string& name, const string& email, const string& password, int num) {
-        // TO DO : Implement this function
-        // Write your libpqxx INSERT code here
+        try{
+            pqxx::connection C =connectDB();
+            pqxx::work W(C);
+
+            string tableName = "";
+            string idColumn  = "";
+
+            if(role == "Manager" || role == "manager"){
+                tableName = "managers";
+                idColumn  = "m_id";
+            }
+            else if(role == "Employee" || role == "employee"){
+                tableName = "employees";
+                idColumn  = "employee_id";
+            }
+            else if(role == "Customer" || role == "customer"){
+                tableName = "customers";
+                idColumn  = "customer_id";
+            }
+            string query = "INSERT INTO " + tableName + " (" + idColumn + ", name, email, password, num) VALUES (" +
+                            to_string(id) + ", " +
+                            W.quote(name) + ", " +
+                            W.quote(email) + ", " +
+                            W.quote(password) + ", " +
+                            W.quote(to_string(num)) + ");";
+            W.exec(query);
+            W.commit();
+            cout << "\n[Database Success]: User added successfully to " << tableName << "!\n";
+
+        }catch(const exception& e){
+          cerr << "\n[Database Error]: " << e.what() << endl;  
+        }
     }
 
     // Checks user credentials against the real database[cite: 2, 10]
     static bool authenticateQuery(const string& role, int id, const string& name, const string& password) {
-        // TO DO : Implement this function
-        // Write your libpqxx SELECT query here
-        return true; 
+        try{
+            pqxx::connection C = connectDB();
+            pqxx::nontransaction N(C);
+
+            string tableName = "";
+            string idColumn  = "";
+            if (role == "Manager" || role == "manager") { 
+                tableName = "managers"; 
+                idColumn = "m_id"; 
+            }else if (role == "Employee" || role == "employee"){ 
+                tableName = "employees"; 
+                idColumn = "employee_id"; 
+            }
+            else if (role == "Customer" || role == "customer"){ 
+                tableName = "customers"; 
+                idColumn = "customer_id"; 
+            }
+
+            string query = "SELECT * FROM " + tableName + " WHERE " + idColumn + " = " + to_string(id) + 
+            " AND name = " + N.quote(name) + 
+            " AND password = " + N.quote(password) + ";";
+
+            pqxx::result R = N.exec(query);
+            return !R.empty();
+
+        }catch (const exception& e) {
+        cerr << "\n[Database Error]: " << e.what() << endl;
+        return false;
+        }
     }
 };
 
@@ -95,8 +155,10 @@ public:
     }
     
     void renderGUI() override {
-        // TO DO : Implement this function
-        // Draw Manager Graphical Dashboard (e.g., ImGui::Begin("Manager Dashboard"), buttons for tables, products, employees)[cite: 2]
+        ImGui::Begin("Manager Dashboard");
+        ImGui::Text("Welcome Manager: %s", name.c_str());
+        if(ImGui::Button("Manage Employees & Tables")) { /* Logic */ }
+        ImGui::End();
     }
 };
 
@@ -118,8 +180,10 @@ public:
     }
 
     void renderGUI() override {
-        // TO DO : Implement this function
-        // Draw Employee Graphical Dashboard (e.g., buttons to view products/customers, verify orders)[cite: 2]
+        ImGui::Begin("Employee Dashboard");
+        ImGui::Text("Welcome Employee: %s", name.c_str());
+        if (ImGui::Button("Verify Orders & Customers")) { /* Logic */ }
+        ImGui::End();
     }
 };
 
@@ -141,8 +205,10 @@ public:
     }
 
     void renderGUI() override {
-        // TO DO : Implement this function
-        // Draw Customer Graphical Dashboard (e.g., view product catalog, place orders)[cite: 2]
+        ImGui::Begin("Customer Storefront");
+        ImGui::Text("Welcome Customer: %s", name.c_str());
+        if (ImGui::Button("Browse Catalog & Place Order")) { /* Logic */ }
+        ImGui::End();
     }
 };
 
@@ -174,21 +240,176 @@ private:
     shared_ptr<User> loggedInUser = nullptr;
     bool isLoggedIn = false;
 
+    int inputId = 0;
+    char inputName[128] = "";
+    char inputPassword[128] = "";
+    int selectedRole = 0;
+    const char* roles[3] = {"Manager", "Employee", "Customer"};
+
 public:
     void renderMainGUIWindow() {
-        // TO DO : Implement this function
-        // Main GUI frame loop: manages Login/Sign-up text inputs, dropdowns, and switches to loggedInUser->renderGUI() upon successful authentication[cite: 2]
-    }
+        ImGui::Begin("Electronic Store Management System");
+
+        if (!isLoggedIn) {
+            if (ImGui::BeginTabBar("AuthTabs")) {
+                if (ImGui::BeginTabItem("Login")) {
+                    ImGui::InputInt("ID", &inputId);
+                    ImGui::InputText("Name", inputName, IM_ARRAYSIZE(inputName));
+                    
+                    
+                    ImGui::InputText("Password", inputPassword, IM_ARRAYSIZE(inputPassword), ImGuiInputTextFlags_Password);
+                    
+                    ImGui::Combo("Role", &selectedRole, roles, 3);
+
+                    if (ImGui::Button("Login Submit")) {
+                        string roleStr = roles[selectedRole];
+                        auto tempUser = UserFactory::createUser(roleStr, inputId, inputName, "", inputPassword, 0);
+                        if (tempUser && tempUser->login(inputId, inputName, inputPassword)) {
+                            loggedInUser = tempUser;
+                            isLoggedIn = true;
+                        }
+                    }
+                    ImGui::EndTabItem();
+                }
+                ImGui::EndTabBar();
+            }
+        } else {
+            if (loggedInUser) {
+                loggedInUser->renderGUI();
+                if (ImGui::Button("Log Out")) { 
+                    isLoggedIn = false; 
+                    loggedInUser = nullptr; 
+                }
+            }
+        }
+
+        ImGui::End();
+    }   
 };
 
 // ==========================================
 // 5. MAIN GRAPHICAL PROGRAM
 // ==========================================
 int main() {
-    // TO DO : Implement this function
-    // Initialize GLFW window, OpenGL context, and Dear ImGui context here, then run the render loop using RunGUI.
     
-    RunGUI guiApp;
-    cout << "Electronic Store GUI Application Initialized Skeleton.\n";
+    //TESTING GUI , DO NOT TOUCH
+    /*
+    if (!glfwInit())
+        return -1;
+
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Electronic Store Management System", NULL, NULL);
+    if (window == NULL) {
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    ImGui::GetStyle().ScaleAllSizes(1.5f);
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 130");
+
+    int current_screen = 0;
+    char username[64] = "";
+    char password[64] = "";
+    std::string message = "";
+
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(io.DisplaySize);
+
+        ImGui::Begin("Electronic Store Management System", NULL, 
+            ImGuiWindowFlags_NoResize | 
+            ImGuiWindowFlags_NoMove | 
+            ImGuiWindowFlags_NoCollapse | 
+            ImGuiWindowFlags_NoBringToFrontOnFocus);
+
+        if (current_screen == 0) {
+            ImGui::SetCursorPos(ImVec2(io.DisplaySize.x * 0.35f, io.DisplaySize.y * 0.35f));
+            ImGui::Text("Welcome to Electronic Store Management System");
+            
+            ImGui::SetCursorPos(ImVec2(io.DisplaySize.x * 0.4f, io.DisplaySize.y * 0.45f));
+            if (ImGui::Button("Login", ImVec2(150, 45))) {
+                current_screen = 1;
+                message = "";
+            }
+
+            ImGui::SetCursorPos(ImVec2(io.DisplaySize.x * 0.4f, io.DisplaySize.y * 0.55f));
+            if (ImGui::Button("Sign Up", ImVec2(150, 45))) {
+                current_screen = 2;
+                message = "";
+            }
+        }
+        else if (current_screen == 1) {
+            ImGui::Text("=== Login Screen ===");
+            ImGui::InputText("Username", username, IM_ARRAYSIZE(username));
+            ImGui::InputText("Password", password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
+
+            if (ImGui::Button("Login Submit")) {
+                message = "Login feature executed!";
+            }
+
+            if (!message.empty()) {
+                ImGui::TextColored(ImVec4(0, 1, 0, 1), "%s", message.c_str());
+            }
+
+            if (ImGui::Button("Back to Home")) {
+                current_screen = 0;
+            }
+        }
+        else if (current_screen == 2) {
+            ImGui::Text("=== Sign Up Screen ===");
+            ImGui::InputText("New Username", username, IM_ARRAYSIZE(username));
+            ImGui::InputText("New Password", password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
+
+            if (ImGui::Button("Create Account")) {
+                try {
+                    message = "Account created successfully and added to Database!";
+                } catch (const std::exception &e) {
+                    message = "Error: " + std::string(e.what());
+                }
+            }
+
+            if (!message.empty()) {
+                ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", message.c_str());
+            }
+
+            if (ImGui::Button("Back to Home")) {
+                current_screen = 0;
+            }
+        }
+
+        ImGui::End();
+
+        ImGui::Render();
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwSwapBuffers(window);
+    }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    */
     return 0;
 }

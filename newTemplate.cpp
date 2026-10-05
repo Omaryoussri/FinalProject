@@ -12,8 +12,11 @@
 
 using namespace std;
 
-// Forward declarations
-class Product{private:
+// ==========================================
+// 1. Product Class
+// ==========================================
+class Product{
+    private:
     int productId;
     string name;
     double price;
@@ -28,9 +31,13 @@ public:
     double getPrice() const { return price; }
     int getStockQuantity() const { return stockQuantity; }
 
-    void updateStock(int quantity) { stockQuantity += quantity; }
+    void updateStock(int quantity) { stockQuantity -= quantity; }
     bool checkAvailability(int requestedQty) const { return stockQuantity >= requestedQty; }
 };
+
+// ==========================================
+// 2. ORDER CLASS
+// ==========================================
 class Order{private:
     int orderId;
     int customerId;
@@ -69,7 +76,7 @@ public:
 };
 
 // ==========================================
-// 1. DATABASE MANAGER 
+// 3. DATABASE MANAGER 
 // ==========================================
 class DatabaseManager {
 public:
@@ -148,7 +155,7 @@ public:
 };
 
 // ==========================================
-// 2. USER HIERARCHY (OOP & GUI Polymorphism)
+// 4. USER HIERARCHY (OOP & GUI Polymorphism)
 // ==========================================
 
 class Authentication {
@@ -265,7 +272,7 @@ public:
 };
 
 // ==========================================
-// 3. USER FACTORY (Creates Users)
+// 5. USER FACTORY (Creates Users)
 // ==========================================
 class UserFactory {
 public:
@@ -285,7 +292,7 @@ public:
 };
 
 // ==========================================
-// 4. GUI APPLICATION RUNNER (Replaces Terminal Loop)
+// 6. GUI APPLICATION RUNNER (Replaces Terminal Loop)
 // ==========================================
 class RunGUI {
 private:
@@ -340,7 +347,7 @@ public:
 };
 
 // ==========================================
-// 5. MAIN GRAPHICAL PROGRAM
+// 7. MAIN GRAPHICAL PROGRAM
 // ==========================================
 int main() {
     

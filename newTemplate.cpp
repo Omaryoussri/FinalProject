@@ -13,8 +13,60 @@
 using namespace std;
 
 // Forward declarations
-class Product;
-class Order;
+class Product{private:
+    int productId;
+    string name;
+    double price;
+    int stockQuantity;
+
+public:
+    Product(int id, string productName, double productPrice, int quantity)
+        : productId(id), name(productName), price(productPrice), stockQuantity(quantity) {}
+
+    int getProductId() const { return productId; }
+    string getName() const { return name; }
+    double getPrice() const { return price; }
+    int getStockQuantity() const { return stockQuantity; }
+
+    void updateStock(int quantity) { stockQuantity += quantity; }
+    bool checkAvailability(int requestedQty) const { return stockQuantity >= requestedQty; }
+};
+class Order{private:
+    int orderId;
+    int customerId;
+    vector<pair<int, int>> productsList; // تخزين (ProductId, Quantity)
+    double totalAmount;
+    string status; // Pending, Completed, Cancelled
+
+public:
+    Order(int id, int custId) 
+        : orderId(id), customerId(custId), totalAmount(0.0), status("Pending") {}
+
+    void addProduct(int productId, int quantity, double price) {
+        productsList.push_back({productId, quantity});
+        totalAmount += (price * quantity);
+    }
+
+    double getTotalAmount() const {
+        return totalAmount;
+    }
+
+    string getStatus() const {
+        return status;
+    }
+
+    void setStatus(string newStatus) {
+        status = newStatus;
+    }
+
+    void processTransaction() {
+        if (totalAmount > 0) {
+            status = "Completed";
+        } else {
+            status = "Failed";
+        }
+    }
+};
 
 // ==========================================
 // 1. DATABASE MANAGER 

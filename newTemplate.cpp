@@ -198,21 +198,22 @@ public:
 
 class Manager : public User {
 public:
+
     Manager(int id, string name, string email, string password, int num)
-        : User(id, name, email, password, num, "Manager") {
-        // TO DO : Implement this function
-    }
+    : User(id, name, email, password, num, "Manager") {
+    
+}
+
 
     bool login(int id, const string& name, const string& password) override {
-        // TO DO : Implement this function
-        return DatabaseManager::authenticateQuery("manager", id, name, password);
-    }
+    return DatabaseManager::authenticateQuery("manager", id, name, password);
+}
+
 
     void signUp(int id, const string& name, const string& password, const string& email, int num) override {
-        // TO DO : Implement this function
-        DatabaseManager::insertUser("Manager", id, name, email, password, num);
-    }
-    
+    DatabaseManager::insertUser("Manager", id, name, email, password, num);
+}
+
     void renderGUI() override {
         ImGui::Begin("Manager Dashboard");
         ImGui::Text("Welcome Manager: %s", name.c_str());

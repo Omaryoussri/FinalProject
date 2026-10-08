@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <algorithm>
+#include <cctype>
 #include <pqxx/pqxx> // PostgreSQL C++ Connection Library
 
 // --- GUI Library Headers (Dear ImGui / GLFW / OpenGL) ---
@@ -226,16 +228,13 @@ class Employee : public User {
 public:
     Employee(int id, string name, string email, string password, int num)
         : User(id, name, email, password, num, "Employee") {
-        // TO DO : Implement this function
     }
 
     bool login(int id, const string& name, const string& password) override {
-        // TO DO : Implement this function
         return DatabaseManager::authenticateQuery("employee", id, name, password);
     }
 
     void signUp(int id, const string& name, const string& password, const string& email, int num) override {
-        // TO DO : Implement this function
         DatabaseManager::insertUser("Employee", id, name, email, password, num);
     }
 
@@ -251,16 +250,13 @@ class Customer : public User {
 public:
     Customer(int id, string name, string email, string password, int num)
         : User(id, name, email, password, num, "Customer") {
-        // TO DO : Implement this function
     }
 
     bool login(int id, const string& name, const string& password) override {
-        // TO DO : Implement this function
         return DatabaseManager::authenticateQuery("customer", id, name, password);
     }
 
     void signUp(int id, const string& name, const string& password, const string& email, int num) override {
-        // TO DO : Implement this function
         DatabaseManager::insertUser("Customer", id, name, email, password, num);
     }
 
@@ -276,18 +272,51 @@ public:
 // 5. USER FACTORY (Creates Users)
 // ==========================================
 class UserFactory {
+private:
+    // Normalize the role so the factory accepts values such as
+    // "Manager", "manager", or " MANAGER ".
+    static string normalizeRole(string role) {
+        // Remove leading/trailing whitespace.
+        const auto first = role.find_first_not_of(" \\t\\n\\r");
+        if (first == string::npos) {
+            return "";
+        }
+
+        const auto last = role.find_last_not_of(" \\t\\n\\r");
+        role = role.substr(first, last - first + 1);
+
+        // Convert to lowercase for case-insensitive comparison.
+        transform(role.begin(), role.end(), role.begin(),
+                  [](unsigned char c) { return static_cast<char>(tolower(c)); });
+
+        return role;
+    }
+
 public:
-    static shared_ptr<User> createUser(const string& role, int id, const string& name, const string& email, const string& password, int num) {
-        // TO DO : Implement this function
-        if (role == "Manager") {
+    // Factory Method:
+    // Creates the correct concrete User object and returns it through
+    // a shared_ptr<User>, allowing polymorphic use by the application.
+    static shared_ptr<User> createUser(const string& role,
+                                       int id,
+                                       const string& name,
+                                       const string& email,
+                                       const string& password,
+                                       int num) {
+        const string normalizedRole = normalizeRole(role);
+
+        if (normalizedRole == "manager") {
             return make_shared<Manager>(id, name, email, password, num);
-        } 
-        else if (role == "Employee") {
+        }
+
+        if (normalizedRole == "employee") {
             return make_shared<Employee>(id, name, email, password, num);
-        } 
-        else if (role == "Customer") {
+        }
+
+        if (normalizedRole == "customer") {
             return make_shared<Customer>(id, name, email, password, num);
         }
+
+        // Unknown role: no User object can be created.
         return nullptr;
     }
 };

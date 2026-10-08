@@ -76,7 +76,6 @@ public:
         return pqxx::connection("dbname=store user=postgres password=omaryoussri258 host=127.0.0.1 port=5432");
     }
     
-    
     static void insertUserWithoutId(const string& role, const string& name, const string& email, const string& password, int num) {
         try {
             pqxx::connection C = connectDB();
@@ -205,7 +204,7 @@ public:
         ImGui::Begin("Manager Dashboard", NULL, 
             ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
-        ImGui::Text("Hello \"Manager Name\": %s", name.c_str());
+        ImGui::Text("Hello \"Manager\": %s", name.c_str());
         ImGui::Separator();
 
         if (managerSubView == 0) {
@@ -223,7 +222,7 @@ public:
                 if (ImGui::Button("Back to Manager Menu", ImVec2(180, 35))) managerSubView = 0;
             } 
             else if (empSubMenu == 1) {
-                ImGui::Text("Add New Employee (ID is generated automatically)");
+                ImGui::Text("Add New Employee");
                 ImGui::InputText("Name", empName, IM_ARRAYSIZE(empName));
                 ImGui::InputText("Email", empEmail, IM_ARRAYSIZE(empEmail));
                 ImGui::InputText("Password", empPass, IM_ARRAYSIZE(empPass), ImGuiInputTextFlags_Password);
@@ -277,7 +276,6 @@ public:
             if (ImGui::Button("Products Table", ImVec2(180, 30))) activeTableDataName = "products";
             if (ImGui::Button("Orders Table", ImVec2(180, 30))) activeTableDataName = "orders";
 
-    
             if (!activeTableDataName.empty()) {
                 ImGui::Separator();
                 ImGui::Text("Data from table: %s", activeTableDataName.c_str());
@@ -288,8 +286,6 @@ public:
 
                     int cols = R.columns();
                     if (ImGui::BeginTable("ManagerTableViewerDynamic", cols, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-                        
-                        
                         for (int i = 0; i < cols; ++i) {
                             ImGui::TableSetupColumn(R.column_name(i));
                         }
@@ -322,7 +318,7 @@ public:
                 if (ImGui::Button("Back to Manager Menu", ImVec2(180, 35))) managerSubView = 0;
             }
             else if (prodSubMenu == 1) {
-                ImGui::Text("Add Product (Product ID is generated automatically)");
+                ImGui::Text("Add Product");
                 ImGui::InputText("Name", prodName, IM_ARRAYSIZE(prodName));
                 ImGui::InputInt("Quantity", &prodQty);
 
@@ -408,7 +404,7 @@ public:
         ImGui::Begin("Employee Dashboard", NULL, 
             ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
-        ImGui::Text("Welcome \"Employee name\": %s", name.c_str());
+        ImGui::Text("Welcome \"Employee\": %s", name.c_str());
         ImGui::Separator();
 
         if (empSubView == 0) {
@@ -429,7 +425,8 @@ public:
                     ImGui::Text("No pending orders found.");
                 } else {
                     int cols = R.columns();
-                    if (ImGui::BeginTable("PendingOrdersTableDynamic", cols, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                    // تم تعديل عدد الأعمدة ليكون cols + 1 ليتطابق مع عمود Action الإضافي بدقة
+                    if (ImGui::BeginTable("PendingOrdersTableDynamic", cols + 1, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
                         for (int i = 0; i < cols; ++i) {
                             ImGui::TableSetupColumn(R.column_name(i));
                         }
@@ -574,7 +571,7 @@ public:
         ImGui::Begin("Customer Storefront", NULL, 
             ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
-        ImGui::Text("Welcome \"Customer name\": %s", name.c_str());
+        ImGui::Text("Welcome \"Customer\": %s", name.c_str());
         ImGui::Separator();
 
         if (custSubView == 0) {

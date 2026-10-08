@@ -4,7 +4,7 @@
 #include <memory>
 #include <algorithm>
 #include <cctype>
-#include <pqxx/pqxx> // PostgreSQL C++ Connection Library
+#include <pqxx/pqxx> // PostgreSQL C++ Connection Library //
 
 // --- GUI Library Headers (Dear ImGui / GLFW / OpenGL) ---
 #include "imgui.h"

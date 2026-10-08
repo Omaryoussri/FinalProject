@@ -1,0 +1,117 @@
+class Employee : public User
+{
+public:
+    Employee(
+        int id,
+        string name,
+        string email,
+        string password,
+        int num
+    )
+        : User(
+            id,
+            name,
+            email,
+            password,
+            num,
+            "Employee"
+        )
+    {
+    }
+    bool login(
+        int id,
+        const string& name,
+        const string& password
+    ) override
+    {
+        return DatabaseManager::authenticateQuery(
+            "Employee",
+            id,
+            name,
+            password
+        );
+    }
+    void signUp(
+        int id,
+        const string& name,
+        const string& password,
+        const string& email,
+        int num
+    ) override
+    {
+        DatabaseManager::insertUser(
+            "Employee",
+            id,
+            name,
+            email,
+            password,
+            num
+        );
+    }
+    void renderGUI() override
+    {
+        ImGui::Begin("Employee Dashboard");
+
+        ImGui::Text(
+            "Welcome Employee: %s",
+            name.c_str()
+        );
+        ImGui::Separator();
+        ImGui::Text(
+            "Employee ID: %d",
+            id
+        );
+        ImGui::Text(
+            "Role: %s",
+            role.c_str()
+        );
+        ImGui::Separator();
+        ImGui::Text("Employee Operations");
+        if (ImGui::Button(
+                "View Orders",
+                ImVec2(180, 40)
+            ))
+        {
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button(
+                "Verify Orders",
+                ImVec2(180, 40)
+            ))
+        {
+        }
+        ImGui::Separator();
+        ImGui::Text("Order Verification");
+        if (ImGui::BeginTable(
+                "OrdersTable",
+                5,
+                ImGuiTableFlags_Borders |
+                ImGuiTableFlags_RowBg |
+                ImGuiTableFlags_Resizable |
+                ImGuiTableFlags_SizingStretchProp
+            ))
+        {
+            ImGui::TableSetupColumn("Order ID");
+            ImGui::TableSetupColumn("Customer ID");
+            ImGui::TableSetupColumn("Total");
+            ImGui::TableSetupColumn("Status");
+            ImGui::TableSetupColumn("Action");
+            ImGui::TableHeadersRow();
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Text("-");
+            ImGui::TableNextColumn();
+            ImGui::Text("-");
+            ImGui::TableNextColumn();
+            ImGui::Text("-");
+            ImGui::TableNextColumn();
+            ImGui::Text("No orders loaded");
+            ImGui::TableNextColumn();
+            ImGui::Text("-");
+            ImGui::EndTable();
+        }
+        ImGui::End();
+    }
+};

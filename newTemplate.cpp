@@ -425,7 +425,6 @@ public:
                     ImGui::Text("No pending orders found.");
                 } else {
                     int cols = R.columns();
-                    // تم تعديل عدد الأعمدة ليكون cols + 1 ليتطابق مع عمود Action الإضافي بدقة
                     if (ImGui::BeginTable("PendingOrdersTableDynamic", cols + 1, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
                         for (int i = 0; i < cols; ++i) {
                             ImGui::TableSetupColumn(R.column_name(i));
